@@ -3,6 +3,9 @@ using Models;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web.Mvc;
+using static Controllers.AccessControl;
+
+[UserAccess(Access.View)]
 public class MediasController : Controller
 {
 
@@ -10,7 +13,7 @@ public class MediasController : Controller
     {
         // Session is a dictionary that hold keys values specific to a session
         // Each user of this web application have their own Session
-        // A Session has a default time out of 20 minutes, after time out it is cleared
+        // A Session has a default time out of 20 minutes, after time out it is cleare
 
         if (Session["CurrentMediaId"] == null) Session["CurrentMediaId"] = 0;
         if (Session["CurrentMediaTitle"] == null) Session["CurrentMediaTitle"] = "";
@@ -168,23 +171,32 @@ public class MediasController : Controller
     }
     public ActionResult GetMedia(bool forceRefresh = false)
     {
-        if (DB.Medias.HasChanged || forceRefresh)
+        try
         {
-            int id = Session["CurrentMediaId"] != null ? (int)Session["CurrentMediaId"] : 0;
-            if (id != 0)
+            if (DB.Medias.HasChanged || forceRefresh)
             {
-                Media media = DB.Medias.Get(id);
-                if (media != null)
-                    return PartialView(media);
+                int id = Session["CurrentMediaId"] != null ? (int)Session["CurrentMediaId"] : 0;
+                if (id != 0)
+                {
+                    Media media = DB.Medias.Get(id);
+                    if (media != null)
+                        return PartialView(media);
+                }
             }
+            return null;
         }
-        return null;
+        catch (System.Exception ex)
+        {
+            return Content("Erreur interne" + ex.Message, "text/html");
+        }
     }
+    [UserAccess(Access.Write)]
     public ActionResult Create()
     {
         return View(new Media());
     }
 
+    [UserAccess(Access.Write)]
     [HttpPost]
     /* Install anti forgery token verification attribute.
      * the goal is to prevent submission of data from a page 
@@ -196,6 +208,7 @@ public class MediasController : Controller
         return RedirectToAction("List");
     }
 
+    [UserAccess(Access.Write)]
     public ActionResult Edit()
     {
         // Note that id is not provided has a parameter.
@@ -214,6 +227,7 @@ public class MediasController : Controller
         return RedirectToAction("List");
     }
 
+    [UserAccess(Access.Write)]
     [HttpPost]
     [ValidateAntiForgeryToken()]
     public ActionResult Edit(Media Media)
@@ -233,6 +247,7 @@ public class MediasController : Controller
         }
         return RedirectToAction("Details/" + id);
     }
+    [UserAccess(Access.Write)]
     public ActionResult Delete()
     {
         int id = Session["CurrentMediaId"] != null ? (int)Session["CurrentMediaId"] : 0;

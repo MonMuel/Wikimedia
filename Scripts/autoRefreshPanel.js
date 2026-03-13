@@ -42,6 +42,7 @@ class AutoRefreshedPanel {
             $.ajax({
                 url: this.contentServiceURL + (forced ? (this.contentServiceURL.indexOf("?") > -1 ? "&" : "?") + "forceRefresh=true" : ""),
                 dataType: "html",
+                cache: false,
                 success: (htmlContent) => {
                     if (htmlContent != "blocked")
                         this.replaceContent(htmlContent);
