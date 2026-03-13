@@ -1,0 +1,18 @@
+﻿@model Models.Media
+@{ ViewBag.PageTitle = "Détails"; }
+
+<div id="MediaDetailPanel">
+    @{ Html.RenderPartial("GetMedia", Model); }
+</div>
+
+@section Scripts {
+    <script>
+        $(() => {
+            let mediaDetailAutoRefreshPanel =
+                new AutoRefreshedPanel(
+                    "MediaDetailPanel",
+                    "/Medias/GetMedia",
+                    3);
+        })
+    </script>
+}
