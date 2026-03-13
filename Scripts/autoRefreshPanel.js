@@ -63,7 +63,7 @@ class AutoRefreshedPanel {
                     moreCallBack(params);
 
             },
-            statusCode: { 500: this.redirect }
+            statusCode: { 401: this.redirect, 500: this.redirect }
         });
     }
     postCommand(url, data, moreCallBack = null) {
@@ -77,7 +77,7 @@ class AutoRefreshedPanel {
                 if (moreCallBack != null)
                     moreCallBack(params);
             },
-            statusCode: { 500: this.redirect }
+            statusCode: { 401: this.redirect, 500: this.redirect }
         });
     }
 

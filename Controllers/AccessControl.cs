@@ -20,27 +20,32 @@ namespace Controllers
 
             protected override bool AuthorizeCore(HttpContextBase httpContext)
             {
-                bool ajaxRequest = HttpContext.Current.Request.Headers[13] == "cors";
                 try
                 {
                     if (User.ConnectedUser == null)
-                    {
-                        if (!ajaxRequest)
-                            httpContext.Response.Redirect("/Accounts/Login?message=Accès non autorisé!&success=false");
                         return false;
-                    }
-                    else
-                    {
-                        if (User.ConnectedUser.Access < RequiredAccess || User.ConnectedUser.Blocked)
-                        {
-                            return false;
-                        }
-                        return true;
-                    }
+
+                    if (User.ConnectedUser.Access < RequiredAccess || User.ConnectedUser.Blocked)
+                        return false;
+
+                    return true;
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     return false;
+                }
+            }
+
+            protected override void HandleUnauthorizedRequest(AuthorizationContext filterContext)
+            {
+                bool isAjax = filterContext.HttpContext.Request.Headers["X-Requested-With"] == "XMLHttpRequest";
+                if (isAjax)
+                {
+                    filterContext.Result = new HttpStatusCodeResult(401);
+                }
+                else
+                {
+                    filterContext.Result = new RedirectResult("/Accounts/Login?message=Accès non autorisé!&success=false");
                 }
             }
         }

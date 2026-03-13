@@ -271,7 +271,7 @@ namespace Controllers
             return RedirectToAction("Login?message=Votre compte a été effacé avec succès!");
         }
 
-        [UserAccess(Access.Write)]
+        [UserAccess(Access.Admin)]
         public ActionResult GetUsers(bool forceRefresh = false)
         {
             if (DB.Users.HasChanged || DB.Logins.HasChanged || forceRefresh)

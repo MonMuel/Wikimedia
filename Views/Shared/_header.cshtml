@@ -11,6 +11,9 @@
     string checkSortByDate = sortByTitle ? "" : "fa-check";
     var Categories = (List<string>)Session["Categories"];
     bool SearchAscending = Session["SortAscending"] != null ? (bool)Session["SortAscending"] : true;
+    var connectedUser = Models.User.ConnectedUser;
+    bool canWrite = connectedUser != null && connectedUser.CanWrite;
+    bool isAdmin = connectedUser != null && connectedUser.IsAdmin;
 }
 
 <div class="section roundedBorder">
@@ -22,7 +25,10 @@
         {
             case "list":
                 <div id="mainMenuPanel" class="menu">
-                    <a href="/@controller/Create" class="cmdIcon fa fa-circle-plus" title="Ajouter..."></a>
+                    @if (canWrite)
+                    {
+                        <a href="/@controller/Create" class="cmdIcon fa fa-circle-plus" title="Ajouter..."></a>
+                    }
                     @if (SearchAscending)
                     {
                         <a href="/@controller/ToggleSort" id="cmdToggleSearch" class="cmdIcon fa fa-arrow-down-short-wide" title="Tri ascendant..."></a>
@@ -51,6 +57,13 @@
                             </div>
 
                             <div class="dropdown-divider"></div>
+                            @if (isAdmin)
+                            {
+                                <div class="dropdown-item item-layout">
+                                    <i class="menuIcon fa fa-users-gear"></i>
+                                    <a href="/Accounts/ManageUsers">Gestion des usagers</a>
+                                </div>
+                            }
                             <div class="dropdown-item item-layout">
                                 <i class="menuIcon fa fa-info-circle"></i>
                                 <a href="/@controller/About">À propos...</a>
@@ -61,11 +74,14 @@
                 break;
             case "details":
                 <div id="mainMenuPanel" class="menu">
-                    <a href="/@controller/Edit" class="cmdIcon fa fa-pen-to-square" title="Modifier..."></a>
-                    <i class="cmdIcon fa fa-trash-can"
-                       title="Effacer"
-                       onclick="bootbox.confirm(`<b style=color:red>Effacer le Media : </b><h3>@currentMediaTitle?</h3>`, function(result){ if (result) window.location = '/@controller/Delete'; })">
-                    </i>
+                    @if (canWrite)
+                    {
+                        <a href="/@controller/Edit" class="cmdIcon fa fa-pen-to-square" title="Modifier..."></a>
+                        <i class="cmdIcon fa fa-trash-can"
+                           title="Effacer"
+                           onclick="bootbox.confirm(`<b style=color:red>Effacer le Media : </b><h3>@currentMediaTitle?</h3>`, function(result){ if (result) window.location = '/@controller/Delete'; })">
+                        </i>
+                    }
                     <a href="/@controller/List" class="cmdIcon fa fa-square-xmark" title="retour"></a>
                 </div>
                 break;
@@ -84,6 +100,11 @@
             case "about":
                 <div id="mainMenuPanel" class="menu">
                     <a href="/@controller/List" class="cmdIcon fa fa-square-xmark" title="Retour"></a>
+                </div>
+                break;
+            case "manageusers":
+                <div id="mainMenuPanel" class="menu">
+                    <a href="/Medias/List" class="cmdIcon fa fa-square-xmark" title="Retour"></a>
                 </div>
                 break;
             case "subscribe":
