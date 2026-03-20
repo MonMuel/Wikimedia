@@ -6,7 +6,9 @@
 }
 
 <div class="formLayout">
-    <div id="EventsListContainer"><!-- Periodicaly refreshed --></div>
+    <div id="EventsListContainer"><!-- Periodicaly refreshed -->
+        @Html.Action("GetEventsList", new { forceRefresh = true })
+    </div>
 </div>
 @section Scripts {
 

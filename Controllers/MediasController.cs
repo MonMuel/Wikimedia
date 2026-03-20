@@ -69,42 +69,42 @@ public class MediasController : Controller
         try
         {
             IEnumerable<Media> result = null;
-            // Must evaluate HasChanged before forceRefresh, this will fix an usefull refresh
-            if (DB.Medias.HasChanged || forceRefresh)
+            // Always compute and return the partial view so client receives the rendered medias
+            InitSessionVariables();
+            bool search = (bool)Session["Search"];
+            string searchString = (string)Session["SearchString"];
+
+            var connectedUser = Models.User.ConnectedUser;
+            int connectedUserId = connectedUser != null ? connectedUser.Id : 0;
+            bool isAdmin = connectedUser != null && connectedUser.IsAdmin;
+
+            if (search)
             {
-                // forceRefresh is true when a related view is produce
-                // DB.Medias.HasChanged is true when a change has been applied on any Media
-
-                InitSessionVariables();
-                bool search = (bool)Session["Search"];
-                string searchString = (string)Session["SearchString"];
-
-                if (search)
-                {
-                    result = DB.Medias.ToList().Where(c => c.Title.ToLower().Contains(searchString)).OrderBy(c => c.Title);
-                    string SelectedCategory = (string)Session["SelectedCategory"];
-                    if (SelectedCategory != "")
-                        result = result.Where(c => c.Category == SelectedCategory);
-                }
-                else
-                    result = DB.Medias.ToList();
-                if ((bool)Session["SortAscending"])
-                {
-                    if ((bool)Session["SortByTitle"])
-                        result = result.OrderBy(c => c.Title);
-                    else
-                        result = result.OrderBy(c => c.PublishDate);
-                }
-                else
-                {
-                    if ((bool)Session["SortByTitle"])
-                        result = result.OrderByDescending(c => c.Title);
-                    else
-                        result = result.OrderByDescending(c => c.PublishDate);
-                }
-                return PartialView(result);
+                result = DB.Medias.ToList().Where(c => c.Title.ToLower().Contains(searchString)).OrderBy(c => c.Title);
+                string SelectedCategory = (string)Session["SelectedCategory"];
+                if (SelectedCategory != "")
+                    result = result.Where(c => c.Category == SelectedCategory);
             }
-            return null;
+            else
+                result = DB.Medias.ToList();
+
+            if (!isAdmin)
+                result = result.Where(c => c.Shared || c.OwnerId == connectedUserId);
+            if ((bool)Session["SortAscending"])
+            {
+                if ((bool)Session["SortByTitle"])
+                    result = result.OrderBy(c => c.Title);
+                else
+                    result = result.OrderBy(c => c.PublishDate);
+            }
+            else
+            {
+                if ((bool)Session["SortByTitle"])
+                    result = result.OrderByDescending(c => c.Title);
+                else
+                    result = result.OrderByDescending(c => c.PublishDate);
+            }
+            return PartialView(result);
         }
         catch (System.Exception ex)
         {
@@ -164,8 +164,17 @@ public class MediasController : Controller
         Media Media = DB.Medias.Get(id);
         if (Media != null)
         {
-            Session["CurrentMediaTitle"] = Media.Title;
-            return View(Media);
+            // only allow viewing if media is shared or the connected user is owner or admin
+            var connectedUser = Models.User.ConnectedUser;
+            int connectedUserId = connectedUser != null ? connectedUser.Id : 0;
+            bool isAdmin = connectedUser != null && connectedUser.IsAdmin;
+            if (Media.Shared || isAdmin || Media.OwnerId == connectedUserId)
+            {
+                Session["CurrentMediaTitle"] = Media.Title;
+                return View(Media);
+            }
+            // not authorized to view this media
+            return RedirectToAction("List");
         }
         return RedirectToAction("List");
     }
@@ -202,8 +211,10 @@ public class MediasController : Controller
      * the goal is to prevent submission of data from a page 
      * that has not been produced by this application*/
     [ValidateAntiForgeryToken()]
-    public ActionResult Create(Media Media)
+    public ActionResult Create(Media Media, string SharedCB = "off")
     {
+        Media.OwnerId = Models.User.ConnectedUser.Id;
+        Media.Shared = SharedCB == "on";
         DB.Medias.Add(Media);
         return RedirectToAction("List");
     }
@@ -222,7 +233,15 @@ public class MediasController : Controller
         {
             Media Media = DB.Medias.Get(id);
             if (Media != null)
-                return View(Media);
+            {
+                var connectedUser = Models.User.ConnectedUser;
+                int connectedUserId = connectedUser != null ? connectedUser.Id : 0;
+                bool isAdmin = connectedUser != null && connectedUser.IsAdmin;
+                // only creator or admin can edit
+                if (isAdmin || Media.OwnerId == connectedUserId)
+                    return View(Media);
+                return RedirectToAction("List");
+            }
         }
         return RedirectToAction("List");
     }
@@ -230,20 +249,29 @@ public class MediasController : Controller
     [UserAccess(Access.Write)]
     [HttpPost]
     [ValidateAntiForgeryToken()]
-    public ActionResult Edit(Media Media)
+    public ActionResult Edit(Media Media, string SharedCB = "off")
     {
         // Has explained earlier, id of Media is stored server side an not provided in form data
         // passed in the method in order to prever from malicious requests
 
         int id = Session["CurrentMediaId"] != null ? (int)Session["CurrentMediaId"] : 0;
 
-        // Make sure that the Media of id really exist
+        // Make sure that the Media of id really exist and that the user is authorized
         Media storedMedia = DB.Medias.Get(id);
         if (storedMedia != null)
         {
-            Media.Id = id; // patch the Id
-            Media.PublishDate = storedMedia.PublishDate; // keep orignal PublishDate
-            DB.Medias.Update(Media);
+            var connectedUser = Models.User.ConnectedUser;
+            int connectedUserId = connectedUser != null ? connectedUser.Id : 0;
+            bool isAdmin = connectedUser != null && connectedUser.IsAdmin;
+            // only creator or admin can update
+            if (isAdmin || storedMedia.OwnerId == connectedUserId)
+            {
+                Media.Id = id; // patch the Id
+                Media.PublishDate = storedMedia.PublishDate; // keep orignal PublishDate
+                Media.OwnerId = storedMedia.OwnerId; // keep original owner
+                Media.Shared = SharedCB == "on";
+                DB.Medias.Update(Media);
+            }
         }
         return RedirectToAction("Details/" + id);
     }
@@ -253,7 +281,18 @@ public class MediasController : Controller
         int id = Session["CurrentMediaId"] != null ? (int)Session["CurrentMediaId"] : 0;
         if (id != 0)
         {
-            DB.Medias.Delete(id);
+            Media media = DB.Medias.Get(id);
+            if (media != null)
+            {
+                var connectedUser = Models.User.ConnectedUser;
+                int connectedUserId = connectedUser != null ? connectedUser.Id : 0;
+                bool isAdmin = connectedUser != null && connectedUser.IsAdmin;
+                // only creator or admin can delete
+                if (isAdmin || media.OwnerId == connectedUserId)
+                {
+                    DB.Medias.Delete(id);
+                }
+            }
         }
         return RedirectToAction("List");
     }

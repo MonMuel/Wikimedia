@@ -7,12 +7,21 @@ class AutoRefreshedPanel {
         this.contentServiceURL = contentServiceURL;
         this.panelId = panelId;
         this.postRefreshCallback = postRefreshCallback;
+        // ensure only one AutoRefreshedPanel exists per panelId
+        if (!window.AutoRefreshedPanels) window.AutoRefreshedPanels = {};
+        if (window.AutoRefreshedPanels[this.panelId] && typeof window.AutoRefreshedPanels[this.panelId].dispose === 'function') {
+            try { window.AutoRefreshedPanels[this.panelId].dispose(); } catch (e) { }
+        }
+        window.AutoRefreshedPanels[this.panelId] = this;
 
         if (refreshRate != -1) { 
             this.refresh(true);
             this.refreshRate = refreshRate * 1000; 
             this.paused = false;
-            setInterval(() => { this.refresh() }, this.refreshRate);
+            // store interval id so it can be cleared when unloading the page
+            this._intervalId = setInterval(() => { this.refresh() }, this.refreshRate);
+            // ensure the interval is cleared when navigating away to avoid interference
+            window.addEventListener('beforeunload', () => { if (this._intervalId) clearInterval(this._intervalId); });
         }
         $("#updatingView").hide();
     }
@@ -21,6 +30,16 @@ class AutoRefreshedPanel {
     }
     restart() {
         this.paused = false
+    }
+    // stop the periodic refresh and cleanup resources
+    dispose() {
+        this.paused = true;
+        if (this._intervalId) {
+            clearInterval(this._intervalId);
+            this._intervalId = null;
+        }
+        // remove from global registry
+        try { if (window.AutoRefreshedPanels && window.AutoRefreshedPanels[this.panelId] === this) delete window.AutoRefreshedPanels[this.panelId]; } catch (e) { }
     }
     replaceContent(htmlContent) {
         if (htmlContent !== "") {

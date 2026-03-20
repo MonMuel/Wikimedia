@@ -2,12 +2,32 @@
 
 @if (Model.Count() != 0)
 {
-    foreach (var media in Model)
-    {
+        foreach (var media in Model)
+        {
+            var owner = DAL.DB.Users.Get(media.OwnerId);
+            var connectedUser = Models.User.ConnectedUser;
+            string ownerAvatar = owner != null && !string.IsNullOrEmpty(owner.Avatar) ? owner.Avatar : "/App_Assets/Users/no_avatar.png";
+            string ownerName = owner != null ? owner.Name : "Inconnu";
         <div class="mediaLayout">
             <a href="/Medias/Details/@media.Id" title="Voir les détails de @media.Title" style="text-decoration:none; width:100% !important">
-                <div class="mediaThumbnail" 
-                     style="background-image:url('https://img.youtube.com/vi/@media.YoutubeId/mqdefault.jpg');">
+                <div class="mediaThumbnailContainer">
+                    <div class="mediaThumbnail"
+                         style="background-image:url('https://img.youtube.com/vi/@(media.YoutubeId)/mqdefault.jpg');">
+                        @* Shared/private icon: visible only to the media owner *@
+                        @if (connectedUser != null && owner != null && connectedUser.Id == owner.Id)
+                        {
+                            if (media.Shared)
+                            {
+                                <i class="fa fa-share sharedIcon" title="Votre vidéo est partagée"></i>
+                            }
+                            else
+                            {
+                                <i class="fa fa-lock sharedIcon" title="Votre vidéo est privée"></i>
+                            }
+                        }
+
+                        <img class="ownerAvatar" src="@ownerAvatar" alt="@ownerName" title="@ownerName" />
+                    </div>
                 </div>
             </a>
 

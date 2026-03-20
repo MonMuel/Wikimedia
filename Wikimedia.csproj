@@ -203,6 +203,7 @@
     <Content Include="App_Data\Users.json" />
     <Content Include="Models\Index.cshtml" />
     <Content Include="App_Code\Helper.cshtml" />
+    <Content Include="App_Data\Medias.json" />
     <None Include="packages.config" />
     <Content Include="Views\Shared\_header.cshtml" />
     <Content Include="Views\Medias\About.cshtml" />

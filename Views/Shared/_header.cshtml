@@ -64,9 +64,35 @@
                                     <a href="/Accounts/ManageUsers">Gestion des usagers</a>
                                 </div>
                             }
+                            @if (isAdmin)
+                            {
+                                <div class="dropdown-item item-layout">
+                                    <i class="menuIcon fa fa-clock-rotate-left"></i>
+                                    <a href="/Accounts/LoginsJournal">Historique des connexions</a>
+                                </div>
+                            }
+                            @if (isAdmin)
+                            {
+                                <div class="dropdown-item item-layout">
+                                    <i class="menuIcon fa fa-list-check"></i>
+                                    <a href="/Accounts/EventsJournal">Journal d'activités</a>
+                                </div>
+                            }
+                            @if (connectedUser != null)
+                            {
+                                <div class="dropdown-item item-layout">
+                                    <i class="menuIcon fa fa-user"></i>
+                                    <a href="/Accounts/EditProfil">Mon profil</a>
+                                </div>
+                            }
                             <div class="dropdown-item item-layout">
                                 <i class="menuIcon fa fa-info-circle"></i>
                                 <a href="/@controller/About">À propos...</a>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <div class="dropdown-item item-layout">
+                                <i class="menuIcon fa fa-right-from-bracket"></i>
+                                <a href="/Accounts/Logout">Déconnexion</a>
                             </div>
                         </div>
                     </div>
@@ -74,7 +100,17 @@
                 break;
             case "details":
                 <div id="mainMenuPanel" class="menu">
-                    @if (canWrite)
+                    @{
+                        // determine if connected user can modify/delete this media (owner or admin)
+                        bool canModifyMedia = false;
+                        try
+                        {
+                            var media = DAL.DB.Medias.Get(currentMediaId);
+                            canModifyMedia = isAdmin || (connectedUser != null && media != null && media.OwnerId == connectedUser.Id);
+                        }
+                        catch { canModifyMedia = isAdmin; }
+                    }
+                    @if (canModifyMedia)
                     {
                         <a href="/@controller/Edit" class="cmdIcon fa fa-pen-to-square" title="Modifier..."></a>
                         <i class="cmdIcon fa fa-trash-can"
@@ -103,6 +139,16 @@
                 </div>
                 break;
             case "manageusers":
+                <div id="mainMenuPanel" class="menu">
+                    <a href="/Medias/List" class="cmdIcon fa fa-square-xmark" title="Retour"></a>
+                </div>
+                break;
+            case "loginsjournal":
+                <div id="mainMenuPanel" class="menu">
+                    <a href="/Medias/List" class="cmdIcon fa fa-square-xmark" title="Retour"></a>
+                </div>
+                break;
+            case "eventsjournal":
                 <div id="mainMenuPanel" class="menu">
                     <a href="/Medias/List" class="cmdIcon fa fa-square-xmark" title="Retour"></a>
                 </div>

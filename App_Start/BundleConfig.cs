@@ -20,6 +20,7 @@ namespace Wikimedia
                         "~/Content/site.css",
                         "~/Content/menu.css",
                         "~/Content/media.css",
+                        "~/Content/Accounts.css",
                         "~/Content/image-control.css",
                         "~/Content/jqui-custom-datepicker.css"));
         }

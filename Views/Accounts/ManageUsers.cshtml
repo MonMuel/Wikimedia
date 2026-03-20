@@ -13,21 +13,43 @@
             let UsersPanel = new AutoRefreshedPanel("UsersPanel", "@Url.Action("GetUsers")", 5 /*seconds*/, attachEvents);
             function attachEvents() {
                 $(".deleteCmd").click(function (e) {
+                    // blur active element to avoid accessibility/focus issues
+                    document.activeElement && document.activeElement.blur();
                     var userId = $(this).attr("userId");
-                    UsersPanel.confirmedCommand($(this).attr("title") + "?", "/Accounts/DeleteUser/" + userId);
+                    // optimistic UI: remove the user element immediately after delete confirmed
+                    var $row = $(this).closest('.UserPanel');
+                    UsersPanel.confirmedCommand($(this).attr("title") + "?", "/Accounts/DeleteUser/" + userId, function () { $row.remove(); });
                 })
                 $(".setUserAccessCmd").click(function (e) {
+                    // remove focus to prevent bootbox aria-hidden warnings
+                    document.activeElement && document.activeElement.blur();
                     var userId = $(this).attr("userId");
                     var access = $(this).attr("access");
-                    UsersPanel.confirmedCommand($(this).attr("title") + "?", `/Accounts/SetUserAccess?userid=${userId}&access=${access}`);
+                    var $clicked = $(this);
+                    // optimistic UI update callback executed after server confirms
+                    var onSuccess = function () {
+                        // remove selectedAccess from siblings for this user
+                        $(".setUserAccessCmd[userId='" + userId + "']").removeClass("selectedAccess");
+                        $clicked.addClass("selectedAccess");
+                    };
+                    UsersPanel.confirmedCommand($(this).attr("title") + "?", `/Accounts/SetUserAccess?userid=${userId}&access=${access}`, onSuccess);
                 })
                 $(".blockCmd").click(function (e) {
+                    document.activeElement && document.activeElement.blur();
                     var userId = $(this).attr("userId");
-                    UsersPanel.confirmedCommand($(this).attr("title") + "?", "/Accounts/ToggleBlockUser/" + userId);
+                    var $icon = $(this).find('img');
+                    UsersPanel.confirmedCommand($(this).attr("title") + "?", "/Accounts/ToggleBlockUser/" + userId, function () {
+                        // toggle blocked icon visually (simple toggle, server state is authoritative on next full refresh)
+                        $icon.attr('src', $icon.attr('src').indexOf('Masked.png') !== -1 ? '/content/UI-Images/OffLine.png' : '/content/UI-Images/Masked.png');
+                    });
                 })
                 $(".forceVerifyCmd").click(function (e) {
+                    document.activeElement && document.activeElement.blur();
                     var userId = $(this).attr("userId");
-                    UsersPanel.confirmedCommand($(this).attr("title") + "?", "/Accounts/ForceVerifyUser/" + userId);
+                    var $icon = $(this).find('img');
+                    UsersPanel.confirmedCommand($(this).attr("title") + "?", "/Accounts/ForceVerifyUser/" + userId, function () {
+                        $icon.attr('src', '/content/UI-Images/accept.png');
+                    });
                 })
             }
         })

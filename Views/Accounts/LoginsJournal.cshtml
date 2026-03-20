@@ -5,7 +5,9 @@
 }
 
 <div class="formLayout">
-    <div id="LoginsListContainer"><!-- Periodicaly refreshed --></div>
+    <div id="LoginsListContainer"><!-- Periodicaly refreshed -->
+        @Html.Action("GetLoginsList", new { forceRefresh = true })
+    </div>
 </div>
 @section Scripts {
 

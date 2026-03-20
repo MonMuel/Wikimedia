@@ -14,6 +14,73 @@
             background-color: aliceblue;
         }
 
+.mediaThumbnailContainer {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    /* ensure rounded corners include avatar area */
+    border-radius: 6px;
+}
+
+.mediaThumbnail {
+    width: 100% !important;
+    /* use padding-top trick for consistent 16:9 height across browsers */
+    padding-top: 56.25%; /* 16:9 */
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    border-bottom: 0.1px solid #ccc;
+    background-size: cover;
+    background-position: center;
+    display: block;
+    position: relative;
+    z-index: 1;
+}
+
+/* owner avatar as an img element */
+.ownerAvatar {
+    position: absolute;
+    top: 8px;
+    right: 8px; /* position top-right */
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 32px;
+    min-height: 32px;
+    border-radius: 50%; /* round */
+    object-fit: cover; /* crop image to fill */
+    display: block;
+    padding: 0;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    z-index: 20; /* ensure above thumbnail */
+}
+
+/* shared/private icon positioned just left of the avatar (top-right area) */
+.mediaThumbnail .sharedIcon {
+    /* make rule specific to avoid being overridden */
+    position: absolute !important;
+    top: 8px !important;
+    /* place immediately to the left of the avatar which is at right:8px and 40px wide */
+    right: calc(8px + 40px + 8px) !important;
+    left: auto !important;
+    font-size: 14px !important;
+    color: #fff !important;
+    background: rgba(0,0,0,0.45) !important;
+    padding: 6px !important;
+    border-radius: 4px !important;
+    z-index: 999 !important;
+}
+.mediaThumbnail .sharedIcon.fa-lock { background: rgba(0,0,0,0.6) !important; }
+.mediaThumbnail .sharedIcon.fa-share { background: rgba(0,123,255,0.85) !important; }
+
+@media screen and (max-width: 550px) {
+    .ownerAvatar {
+        width: 32px;
+        height: 32px;
+        top: 4px;
+        right: 4px;
+    }
+}
+
 @media screen and (max-width: 800px) {
     .mediaListLayout {
         grid-template-columns: 49.75% 49.75%;
@@ -35,16 +102,6 @@
     }
 }
 
-.mediaThumbnail {
-    width: 100% !important;
-    aspect-ratio: 16/9;
-    border-top-left-radius: 4px;
-    border-top-right-radius: 4px;
-    border-bottom: 0.1px solid #ccc;
-    background-size: cover;
-    background-position: center;
-}
-
 .mediaThumbnailBig {
     width: 100% !important;
     aspect-ratio: 16/9;
@@ -58,4 +115,77 @@
 
 .description {
     font-size: 1em !important;
+}
+
+/* journal entries (login/events) layout and image sizing */
+.journalLayout {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 6px 0;
+}
+.journalLayout > div { display: inline-block; }
+/* constrain avatars and icons inside journal to profile size */
+.journalLayout img, .journalLayout svg {
+    width: 40px !important;
+    height: 40px !important;
+    object-fit: cover !important;
+}
+.journalLayout .extraJournalInfo.IP_Address {
+    font-size: 0.9em;
+}
+
+/* badge indicating shared/private status in media detail */
+.mediaSharedBadge {
+    margin-bottom: 6px;
+}
+.mediaSharedBadge .badge {
+    display: inline-block;
+    padding: 0 6px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    font-weight: 600;
+    background: transparent; /* no colored background */
+    color: inherit;
+}
+.mediaSharedBadge .media-shared {
+    color: black; /* blue text for shared */
+    border: none;
+}
+.mediaSharedBadge .media-private {
+    color: black; /* gray text for private */
+    border: none;
+}
+
+/* media detail owner section */
+.detailsPanel dl .mediaOwner {
+    /* make selector very specific and force flex layout to avoid overrides */
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 10px !important;
+    margin-top: 12px !important; /* spacing after date */
+}
+.detailsPanel dl .mediaOwnerAvatar {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    border: 2px solid #fff !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3) !important;
+}
+.detailsPanel dl .mediaOwnerInfo {
+    display: block !important; /* ensure name sits to the right of avatar */
+}
+.detailsPanel dl .mediaOwnerName { margin-left: 8px !important; }
+.mediaOwnerName {
+    font-weight: 600;
+}
+.mediaOwnerMeta {
+    font-size: 0.85em;
+    color: gray;
+}
+
+@media screen and (max-width: 550px) {
+    .mediaOwnerAvatar { width: 40px; height: 40px; }
 }

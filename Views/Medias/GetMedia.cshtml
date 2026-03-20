@@ -1,8 +1,19 @@
-@model Models.Media
+﻿@model Models.Media
+@{
+    var owner = DAL.DB.Users.Get(Model.OwnerId);
+    string ownerAvatar = owner != null && !string.IsNullOrEmpty(owner.Avatar) ? owner.Avatar : "/App_Assets/Users/no_avatar.png";
+    string ownerName = owner != null ? owner.Name : "Inconnu";
+}
 
 <div class="detailsPanel">
     <dl>
         <dd>
+            <div class="mediaSharedBadge">
+                @if (Model.Shared)
+                {
+                    <span class="badge media-shared">[Partagée]</span>
+                }
+            </div>
             @Model.Title
         </dd>
         <dd>
@@ -25,6 +36,17 @@
 
         <dd>
             @Helper.When(Model.PublishDate)
+        </dd>
+        <dt>
+            Publié par
+        </dt>
+        <dd>
+            <div class="mediaOwner">
+                <img class="mediaOwnerAvatar" src="@Url.Content(ownerAvatar)" alt="@ownerName" title="@ownerName" style="width:40px;height:40px;" />
+                <div class="mediaOwnerInfo">
+                    <div class="mediaOwnerName">@ownerName</div>
+                </div>
+            </div>
         </dd>
 
     </dl>

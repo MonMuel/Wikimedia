@@ -54,5 +54,9 @@
            RequireMessage="Veuillez entrer un id du media Youtube"
            CustomErrorMessage="Cet id est déjà utilisé" />
     <img id="previewThumbnail" class="mediaThumbnailBig" src="https://img.youtube.com/vi/@Model.YoutubeId/mqdefault.jpg" loading="lazy">
+    <div style="margin-top:8px;">
+        <input type="checkbox" id="SharedCB" name="SharedCB" @(Model.Shared ? "checked" : "") />
+        <label for="SharedCB">Partagé</label>
+    </div>
     <input id="submit" type="submit" value="Enregistrer" class="btn btn-primary" style="display:none">
 </form>
